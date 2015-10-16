@@ -48,19 +48,24 @@ class ValueIterationAgent(ValueEstimationAgent):
     #       newValues[state] = max([(sum([stateAndProb[1]*(mdp.getReward(state, action, stateAndProb[0]) + self.discount * oldValues[stateAndProb[0]]) for stateAndProb in mdp.getTransitionStatesAndProbs(state, action)])), action) for action in mdp.getPossibleActions(state)], key=lambda x: x[0])
     #   self.values = newValues
 
+    self.qValues = util.Counter() #To hold Q-values
+    #FIXME Eliminate magic numbers
     for state in mdp.getStates():
        if 'exit' in mdp.getPossibleActions(state):
         self.values[state] = mdp.getReward(state, 'exit', mdp.getTransitionStatesAndProbs(state, 'exit')[0][0])
-       #WARNING: Assumes the last method call only returns a list of one (state, prob) pair
     for iter in range(1, iterations):
-       oldValues = self.values
-       newValues = util.Counter()
+       #print "Iter:", iter
+       oldValues, newValues = self.values, util.Counter()
+       oldQValues, newQValues = self.qValues, util.Counter()
        for state in [state1 for state1 in self.mdp.getStates() if str(state1) != "TERMINAL_STATE"]:
-           #print "Possible actions for state", state, ":", mdp.getPossibleActions(state)
-           #print [oldValues[stateAndProb[0]] for stateAndProb in self.mdp.getTransitionStatesAndProbs(state, action) for action in self.mdp.getPossibleActions(state)]
-           print [(sum([stateAndProb[1]*(self.mdp.getReward(state, action, stateAndProb[0]) + self.discount * oldValues[stateAndProb[0]]) for stateAndProb in self.mdp.getTransitionStatesAndProbs(state, action)]), action) for action in mdp.getPossibleActions(state)]
-           newValues[state] = max([(sum([stateAndProb[1]*(self.mdp.getReward(state, action, stateAndProb[0]) + self.discount * oldValues[stateAndProb[0]]) for stateAndProb in self.mdp.getTransitionStatesAndProbs(state, action)]), action) for action in mdp.getPossibleActions(state)], key=lambda x: x[0])
-       self.values = newValues
+           #print "State:", state
+           valueActionPairs = [(sum([stateAndProb[1]*(self.mdp.getReward(state, action, stateAndProb[0]) + self.discount * oldValues[stateAndProb[0]]) for stateAndProb in self.mdp.getTransitionStatesAndProbs(state, action)]), action) for action in mdp.getPossibleActions(state)]
+           for action in mdp.getPossibleActions(state):
+               newQValues[(state, action)] = [valueActionPair[0] for valueActionPair in valueActionPairs if valueActionPair[1] == action][0]
+               #FIXME Assumes there is only one
+           newValues[state] = max(valueActionPairs, key=lambda x: x[0])[0]
+       self.values, self.qValues = newValues, newQValues
+       #print "Values:", self.values
     
   def getValue(self, state):
     """
@@ -78,7 +83,7 @@ class ValueIterationAgent(ValueEstimationAgent):
       to derive it on the fly.
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    return self.qValues[state, action]
 
   def getPolicy(self, state):
     """
@@ -89,7 +94,16 @@ class ValueIterationAgent(ValueEstimationAgent):
       terminal state, you should return None.
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    if state == 'TERMINAL_STATE':
+        return None
+    else:
+        STATE, ACTION, Q_VALUE = 0, 1, 2
+        #print "State:", state
+        stateActionPairs = [(state, action) for action in self.mdp.getPossibleActions(state)]
+        #print "stateActionPairs:", stateActionPairs
+        qValuesForState = [(stateActionPair[STATE], stateActionPair[ACTION], self.qValues[stateActionPair]) for stateActionPair in stateActionPairs]
+        #print "qValuesForState:", qValuesForState
+        return max(qValuesForState, key=lambda x: x[Q_VALUE])[ACTION]
 
   def getAction(self, state):
     "Returns the policy at the state (no exploration)."
