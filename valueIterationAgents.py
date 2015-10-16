@@ -37,6 +37,30 @@ class ValueIterationAgent(ValueEstimationAgent):
     self.values = util.Counter() # A Counter is a dict with default 0
      
     "*** YOUR CODE HERE ***"
+    #for state in mdp.getStates()
+    #   if Actions.exit in mdp.getPossibleActions(state):
+    #   self.values[state] = mdp.getReward(state, action, mdp.getTransitionStatesAndProbs(state, action)[0][0])
+    #   WARNING: Assumes the last method call only returns a list of one (state, prob) pair
+    #for iter in range(1, iterations):
+    #   oldValues = self.values
+    #   newValues = util.Counter()
+    #   for state in mdp.getStates():
+    #       newValues[state] = max([(sum([stateAndProb[1]*(mdp.getReward(state, action, stateAndProb[0]) + self.discount * oldValues[stateAndProb[0]]) for stateAndProb in mdp.getTransitionStatesAndProbs(state, action)])), action) for action in mdp.getPossibleActions(state)], key=lambda x: x[0])
+    #   self.values = newValues
+
+    for state in mdp.getStates():
+       if 'exit' in mdp.getPossibleActions(state):
+        self.values[state] = mdp.getReward(state, 'exit', mdp.getTransitionStatesAndProbs(state, 'exit')[0][0])
+       #WARNING: Assumes the last method call only returns a list of one (state, prob) pair
+    for iter in range(1, iterations):
+       oldValues = self.values
+       newValues = util.Counter()
+       for state in [state1 for state1 in self.mdp.getStates() if str(state1) != "TERMINAL_STATE"]:
+           #print "Possible actions for state", state, ":", mdp.getPossibleActions(state)
+           #print [oldValues[stateAndProb[0]] for stateAndProb in self.mdp.getTransitionStatesAndProbs(state, action) for action in self.mdp.getPossibleActions(state)]
+           print [(sum([stateAndProb[1]*(self.mdp.getReward(state, action, stateAndProb[0]) + self.discount * oldValues[stateAndProb[0]]) for stateAndProb in self.mdp.getTransitionStatesAndProbs(state, action)]), action) for action in mdp.getPossibleActions(state)]
+           newValues[state] = max([(sum([stateAndProb[1]*(self.mdp.getReward(state, action, stateAndProb[0]) + self.discount * oldValues[stateAndProb[0]]) for stateAndProb in self.mdp.getTransitionStatesAndProbs(state, action)]), action) for action in mdp.getPossibleActions(state)], key=lambda x: x[0])
+       self.values = newValues
     
   def getValue(self, state):
     """
