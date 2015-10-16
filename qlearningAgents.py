@@ -173,10 +173,10 @@ class ApproximateQAgent(PacmanQAgent):
       where * is the dotProduct operator
     """
     "*** YOUR CODE HERE ***"
-    if self.weights[(state, action)] == 0:
-        self.weights[(state, action)] = util.Counter()
+    if self.weights == 0:
+        self.weights = util.Counter()
         return 0
-    else: return self.weights[(state, action)] * self.featExtractor.getFeatures(state, action)
+    else: return self.weights * self.featExtractor.getFeatures(state, action)
 
   def update(self, state, action, nextState, reward):
     """
@@ -186,17 +186,18 @@ class ApproximateQAgent(PacmanQAgent):
     qValue = self.getQValue(state, action)
     nextStateQValues = [self.qValues[(nextState, nextAction)] for nextAction in self.getLegalActions(nextState)]
     correction = (reward + self.discount*(max(nextStateQValues) if len(nextStateQValues) > 0 else 0)) - qValue
-    print "Correction:", correction
-    if self.weights[(state, action)] == 0:
-        self.weights[(state, action)] = util.Counter()
+    #print "Correction:", correction
+    if self.weights == 0:
+        self.weights = util.Counter()
     else:
         features = self.featExtractor.getFeatures(state, action)
-        print "alpha:", self.alpha
+        #print "alpha:", self.alpha
         if self.alpha*correction == 0:
             features[(state, action)] = 0
         else:
             features.divideAll(1./(self.alpha*correction))
-        self.weights[(state, action)] += features
+            #print "features: ", features.values()
+        self.weights += features
 
 
   def final(self, state):
@@ -208,4 +209,4 @@ class ApproximateQAgent(PacmanQAgent):
     if self.episodesSoFar == self.numTraining:
       # you might want to print your weights here for debugging
       "*** YOUR CODE HERE ***"
-      print "Final Weights:", self.weights.values()
+      #print "Final Weights:", self.weights.values()
